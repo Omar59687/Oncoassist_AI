@@ -1,21 +1,52 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Dna } from 'lucide-react';
+import { AnalysisService } from '../../data/AnalysisService';
 
 interface FileUploaderProps {
   onAnalyze: (mGE: File, mDM: File, mCNA: File) => void;
+  errorMessage?: string | null;
 }
 
-const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyze }) => {
+const INPUT_LABELS: Record<string, string> = {
+  mGE: 'Gene Expression (mGE)',
+  mDM: 'DNA Methylation (mDM)',
+  mCNA: 'Copy Number Alterations (mCNA)',
+};
+
+const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyze, errorMessage }) => {
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     mGE: null,
     mDM: null,
     mCNA: null,
   });
+  const [isLoadingDemo, setIsLoadingDemo] = useState(false);
+  const [demoError, setDemoError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     if (e.target.files && e.target.files[0]) {
       setFiles((prev) => ({ ...prev, [type]: e.target.files![0] }));
+    }
+  };
+
+  const handleLoadDemoData = async () => {
+    setIsLoadingDemo(true);
+    setDemoError(null);
+
+    try {
+      const sampleResponse = await AnalysisService.loadDemoData();
+
+      const demoFiles = {
+        mGE: new File([sampleResponse.files.mGE.content], sampleResponse.files.mGE.filename, { type: 'text/csv' }),
+        mDM: new File([sampleResponse.files.mDM.content], sampleResponse.files.mDM.filename, { type: 'text/csv' }),
+        mCNA: new File([sampleResponse.files.mCNA.content], sampleResponse.files.mCNA.filename, { type: 'text/csv' }),
+      };
+
+      setFiles(demoFiles);
+    } catch {
+      setDemoError('Unable to load demo sample files from backend.');
+    } finally {
+      setIsLoadingDemo(false);
     }
   };
 
@@ -34,6 +65,23 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyze }) => {
         <p className="text-slate-500 max-w-lg mx-auto leading-relaxed font-medium">
           Upload your <span className="text-blue-600 font-bold border-b-2 border-blue-100">Multi-Omics</span> CSV files to begin the clinical prediction process.
         </p>
+
+        <button
+          type="button"
+          onClick={handleLoadDemoData}
+          disabled={isLoadingDemo}
+          className="mt-5 px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 transition disabled:opacity-60"
+        >
+          {isLoadingDemo ? 'Loading demo data...' : 'Load demo data'}
+        </button>
+
+        {errorMessage ? (
+          <p className="mt-4 text-sm text-rose-600 font-medium">{errorMessage}</p>
+        ) : null}
+
+        {demoError ? (
+          <p className="mt-2 text-sm text-rose-600 font-medium">{demoError}</p>
+        ) : null}
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -63,10 +111,10 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onAnalyze }) => {
               {files[type] ? <CheckCircle2 size={36} strokeWidth={2.5} /> : <Dna size={36} strokeWidth={2.5} />}
             </div>
 
-            <span className={`font-black text-xl tracking-tight transition-colors duration-500 
+              <span className={`font-black text-lg tracking-tight text-center transition-colors duration-500 
               ${files[type] ? 'text-emerald-700' : 'text-slate-700 group-hover:text-blue-600'}`}>
-              {type}
-            </span>
+              {INPUT_LABELS[type]}
+              </span>
             
             <p className="text-[10px] font-bold text-slate-400 mt-3 text-center uppercase tracking-widest px-4 truncate w-full">
               {files[type] ? files[type]?.name : 'Drag & Drop CSV'}

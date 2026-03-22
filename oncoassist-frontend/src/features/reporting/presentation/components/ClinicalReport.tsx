@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Download, ShieldCheck, Pill, ChevronRight, Dna } from 'lucide-react';
+import { Printer, ShieldCheck, Pill, Dna } from 'lucide-react';
 import type { AnalysisResult } from '../../../analysis/domain/entities/AnalysisResult';
+import RocChart from './RocChart';
 
 interface ClinicalReportProps {
   data: AnalysisResult;
@@ -8,7 +9,7 @@ interface ClinicalReportProps {
 
 const ClinicalReport: React.FC<ClinicalReportProps> = ({ data }) => {
   const topGenes = data.top_genes || [];
-  const topDrugs = data.top_drugs || [];
+  const topDrugs = data.drugs || [];
 
   return (
     <motion.div
@@ -21,8 +22,8 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data }) => {
           <span className="text-blue-600 font-bold text-sm tracking-widest uppercase">Clinical Analysis Result</span>
           <h1 className="text-4xl font-black text-slate-900 mt-1">OncoAssist AI Report</h1>
         </div>
-        <button className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-all shadow-lg">
-          <Download size={18} /> Export PDF
+        <button onClick={() => window.print()} className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 transition-all shadow-lg">
+          <Printer size={18} /> Print Report
         </button>
       </div>
 
@@ -50,6 +51,14 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data }) => {
               Prediction is generated from concatenated mGE + mDM + mCNA feature vectors using the deployed trained model.
             </p>
           </div>
+
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="font-bold text-xl text-slate-800">ROC Curve</h3>
+              <span className="text-sm font-semibold text-blue-700">AUC-ROC: {data.auc_roc.toFixed(3)}</span>
+            </div>
+            <RocChart fpr={data.fpr} tpr={data.tpr} />
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -75,16 +84,25 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data }) => {
             {topDrugs.length === 0 ? (
               <p className="text-slate-500 text-sm">No drug recommendations available for this prediction output.</p>
             ) : (
-              <div className="space-y-3">
-                {topDrugs.map((drug) => (
-                  <div key={drug.name} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-blue-50 transition-colors group">
-                    <div>
-                      <p className="font-bold text-slate-800">{drug.name}</p>
-                      <p className="text-xs text-slate-500">Sensitivity: {drug.sensitivity.toFixed(2)}</p>
-                    </div>
-                    <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="text-slate-500 border-b border-slate-200">
+                      <th className="py-2 pr-3 font-semibold">Drug Name</th>
+                      <th className="py-2 pr-3 font-semibold">Target</th>
+                      <th className="py-2 font-semibold">Pathway</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topDrugs.map((drug) => (
+                      <tr key={`${drug.name}-${drug.target}`} className="border-b border-slate-100">
+                        <td className="py-2 pr-3 font-semibold text-slate-800">{drug.name}</td>
+                        <td className="py-2 pr-3 text-slate-600">{drug.target}</td>
+                        <td className="py-2 text-slate-600">{drug.pathway}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

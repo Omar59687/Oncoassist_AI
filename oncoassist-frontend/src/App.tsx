@@ -9,8 +9,10 @@ import { AnalysisService } from './features/analysis/data/AnalysisService';
 function App() {
   const [status, setStatus] = useState<'upload' | 'loading' | 'report'>('upload');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 const handleStartAnalysis = async (mGE: File, mDM: File, mCNA: File) => {
+  setErrorMessage(null);
   setStatus('loading');
   toast.loading('Uploading genomic data to server...', { id: 'analysis' });
 
@@ -37,8 +39,11 @@ const handleStartAnalysis = async (mGE: File, mDM: File, mCNA: File) => {
   } catch (error: unknown) {
     setStatus('upload');
     const message = axios.isAxiosError(error)
-      ? (error.response?.data?.detail || 'Server error while running prediction.')
+      ? (typeof error.response?.data?.detail === 'string'
+          ? error.response?.data?.detail
+          : error.response?.data?.detail?.message || 'Server error while running prediction.')
       : 'Unexpected error while running prediction.';
+    setErrorMessage(message);
     toast.error(message, { id: 'analysis' });
   }
 };
@@ -47,14 +52,14 @@ const handleStartAnalysis = async (mGE: File, mDM: File, mCNA: File) => {
       <Toaster position="top-right" /> {/* نظام التنبيهات */}
       
       <nav className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setStatus('upload')}>
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white font-black shadow-lg">O</div>
-          <span className="text-xl font-black tracking-tighter text-slate-900 italic">ONCOASSIST <span className="text-blue-600 not-italic">AI</span></span>
-        </div>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setStatus('upload'); setErrorMessage(null); }}>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white font-black shadow-lg">O</div>
+            <span className="text-xl font-black tracking-tighter text-slate-900 italic">ONCOASSIST <span className="text-blue-600 not-italic">AI</span></span>
+          </div>
       </nav>
       
       <main>
-        {status === 'upload' && <FileUploader onAnalyze={handleStartAnalysis} />}
+        {status === 'upload' && <FileUploader onAnalyze={handleStartAnalysis} errorMessage={errorMessage} />}
         {status === 'loading' && <AnalysisLoading />}
         {status === 'report' && analysisResult && <ClinicalReport data={analysisResult} />}
       </main>

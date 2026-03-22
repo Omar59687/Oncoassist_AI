@@ -43,6 +43,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import predict
+from app.services.inference import inference_service
 
 app = FastAPI(title="OncoAssist AI - Clean Backend")
 
@@ -57,6 +58,11 @@ app.add_middleware(
 
 # ربط الـ Router
 app.include_router(predict.router)
+
+
+@app.on_event("startup")
+def load_inference_assets() -> None:
+    inference_service.startup_load_assets()
 
 
 @app.get("/")

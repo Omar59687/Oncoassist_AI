@@ -1,0 +1,11 @@
+name,target,pathway,category
+Pembrolizumab,PD-1,Immune Checkpoint,immunotherapy
+Nivolumab,PD-1,Immune Checkpoint,immunotherapy
+Atezolizumab,PD-L1,Immune Checkpoint,immunotherapy
+Ipilimumab,CTLA-4,Immune Checkpoint,immunotherapy
+Durvalumab,PD-L1,Immune Checkpoint,immunotherapy
+Cisplatin,DNA Crosslink,Chemotherapy,chemotherapy
+Carboplatin,DNA Crosslink,Chemotherapy,chemotherapy
+Paclitaxel,Microtubules,Chemotherapy,chemotherapy
+Docetaxel,Microtubules,Chemotherapy,chemotherapy
+Gemcitabine,DNA Synthesis,Chemotherapy,chemotherapy

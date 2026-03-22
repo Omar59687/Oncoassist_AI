@@ -1,7 +1,7 @@
-import type { AnalysisResult } from '../domain/entities/AnalysisResult';
+import type { AnalysisResult, SampleDataResponse } from '../domain/entities/AnalysisResult';
 import oncoClient from '../../../core/api/oncoClient';
+
 export const AnalysisService = {
-  // دالة إرسال الملفات الثلاثة معاً كما يتطلب نموذج AE-CTGAN
   uploadGenomicData: async (mGE: File, mDM: File, mCNA: File): Promise<AnalysisResult> => {
     const formData = new FormData();
     formData.append('mGE', mGE);
@@ -10,5 +10,10 @@ export const AnalysisService = {
 
     const response = await oncoClient.post<AnalysisResult>('/predict', formData);
     return response.data;
-  }
+  },
+
+  loadDemoData: async (): Promise<SampleDataResponse> => {
+    const response = await oncoClient.get<SampleDataResponse>('/sample');
+    return response.data;
+  },
 };
