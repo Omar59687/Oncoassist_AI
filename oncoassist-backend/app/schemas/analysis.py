@@ -9,12 +9,18 @@ class DrugRecommendation(BaseModel):
     pathway: str
 
 
+class GeneImportance(BaseModel):
+    name: str
+    importance: float
+
+
 class AnalysisResponse(BaseModel):
     prediction: str
     confidence: float
+    is_inconclusive: bool
     auc_roc: float
     fpr: List[float]
     tpr: List[float]
     clinical_note: str
-    top_genes: List[str]
+    top_genes: List[GeneImportance]
     drugs: List[DrugRecommendation]

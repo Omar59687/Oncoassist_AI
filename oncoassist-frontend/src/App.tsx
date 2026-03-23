@@ -51,7 +51,7 @@ const handleStartAnalysis = async (mGE: File, mDM: File, mCNA: File) => {
     <div className="min-h-screen bg-slate-50 font-sans">
       <Toaster position="top-right" /> {/* نظام التنبيهات */}
       
-      <nav className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center">
+      <nav className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center no-print">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => { setStatus('upload'); setErrorMessage(null); }}>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white font-black shadow-lg">O</div>
             <span className="text-xl font-black tracking-tighter text-slate-900 italic">ONCOASSIST <span className="text-blue-600 not-italic">AI</span></span>

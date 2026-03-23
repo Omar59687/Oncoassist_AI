@@ -1,18 +1,14 @@
-export interface DrugRecommendation {
+export interface GeneImportance {
   name: string;
-  target: string;
-  pathway: string;
+  importance: number;
 }
 
 export interface AnalysisResult {
   prediction: string;
   confidence: number;
-  auc_roc: number;
-  fpr: number[];
-  tpr: number[];
+  is_inconclusive?: boolean;
   clinical_note: string;
-  top_genes: string[];
-  drugs: DrugRecommendation[];
+  top_genes: GeneImportance[];
 }
 
 export interface SampleFilePayload {

@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-report-shell {
+    display: block !important;
+  }
+
+  .print-report-shell > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
