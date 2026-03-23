@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Dna, Printer, ShieldCheck } from 'lucide-react';
 import type { AnalysisResult } from '../../../analysis/domain/entities/AnalysisResult';
 import { CLINICAL_INSIGHTS, DISCLAIMER, METHODOLOGY_LIMITATIONS } from '../../../analysis/domain/constants/clinicalConstants';
+import { buildInterpretationSummary, buildProcessingOverview, buildSuggestedNextStep, getConfidenceBand } from '../../domain/reportNarrative';
 
 type UploadedFileNames = {
   mGE: string;
@@ -72,16 +73,10 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data, uploadedFileNames
 
   const maxImportance = Math.max(...topGenes.map((gene) => gene.importance), 1);
   const confidenceLabel = confidenceDescriptor(data.confidence);
-
-  const interpretation = isInconclusive
-    ? 'The model output is not strongly separated. This result should be interpreted with caution and confirmed with clinical and laboratory context.'
-    : clinicalInsight.description;
-
-  const suggestedNextStep = isInconclusive
-    ? 'Repeat molecular review and correlate with laboratory findings before considering treatment pathway decisions. Multidisciplinary oncologist review is advised.'
-    : isHighTMB
-      ? 'Correlate this signal with pathology and staging data. Consider immunotherapy eligibility review in the appropriate clinical context.'
-      : 'Correlate with pathology and disease staging. Consider standard-of-care planning with oncologist review and laboratory confirmation.';
+  const confidenceBand = getConfidenceBand(data.confidence, data.is_inconclusive);
+  const interpretationSummary = buildInterpretationSummary({ result: data, uploadedFileNames });
+  const suggestedNextStep = buildSuggestedNextStep({ result: data, uploadedFileNames });
+  const processingOverview = buildProcessingOverview({ result: data, uploadedFileNames });
 
   const modalityCards = [
     {
@@ -143,7 +138,7 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data, uploadedFileNames
                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${isHighTMB ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-orange-100 text-orange-800 border-orange-200'}`}>
                   {isHighTMB ? 'High-TMB signal' : 'Low-TMB signal'}
                 </span>
-                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${data.confidence >= 0.75 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : data.confidence >= 0.55 ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
+                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${confidenceBand === 'high' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : confidenceBand === 'moderate' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-rose-100 text-rose-700 border-rose-200'}`}>
                   {confidenceLabel}
                 </span>
                 {isInconclusive ? (
@@ -176,7 +171,18 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data, uploadedFileNames
 
               <div className={`rounded-xl border-l-4 p-4 ${isHighTMB ? 'border-emerald-500 bg-emerald-100/40' : 'border-orange-500 bg-orange-100/40'}`}>
                 <p className="text-xs tracking-widest uppercase font-semibold text-slate-600 mb-1">Clinical Interpretation</p>
-                <p className="text-sm text-slate-700 leading-relaxed">{interpretation}</p>
+                <p className="text-sm text-slate-700 leading-relaxed">{clinicalInsight.description}</p>
+              </div>
+
+              <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+                <p className="text-xs tracking-widest uppercase font-semibold text-blue-700 mb-2">AI Interpretation Summary</p>
+                <div className="space-y-2">
+                  {interpretationSummary.map((line) => (
+                    <p key={line} className="text-sm text-slate-700 leading-relaxed">
+                      {line}
+                    </p>
+                  ))}
+                </div>
               </div>
 
               <div className="rounded-xl border border-slate-300 bg-white/70 p-4">
@@ -211,6 +217,38 @@ const ClinicalReport: React.FC<ClinicalReportProps> = ({ data, uploadedFileNames
                   <p className="text-[11px] font-semibold text-emerald-700 mt-2">Validated · Parsed successfully · Included in prediction</p>
                 </div>
               ))}
+            </div>
+          </article>
+
+          <article className="bg-slate-50 rounded-3xl p-6 md:p-8 border-2 border-slate-200 print-avoid-break">
+            <h3 className="font-bold text-xl text-slate-900 mb-4">How the Model Produced This Result</h3>
+            <div className="space-y-3 mb-5">
+              {processingOverview.liveSteps.map((step, index) => (
+                <div key={step.title} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-800">{index + 1}. {step.title}</p>
+                  <p className="text-xs text-slate-600 mt-1">{step.detail}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 mb-5">
+              <p className="text-sm font-semibold text-slate-800 mb-2">Case Evidence</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {processingOverview.evidenceRows.map((row) => (
+                  <div key={row.label} className="text-xs text-slate-700">
+                    <span className="font-semibold">{row.label}:</span> {row.value}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-sm font-semibold text-slate-800 mb-2">Model Development Context</p>
+              <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                {processingOverview.developmentContext.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
             </div>
           </article>
 
