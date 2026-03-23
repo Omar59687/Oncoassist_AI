@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class DrugRecommendation(BaseModel):
@@ -17,7 +17,7 @@ class GeneImportance(BaseModel):
 class AnalysisResponse(BaseModel):
     prediction: str
     confidence: float
-    is_inconclusive: bool
+    is_inconclusive: bool = Field(default=False)
     auc_roc: float
     fpr: List[float]
     tpr: List[float]

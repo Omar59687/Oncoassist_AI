@@ -6,7 +6,7 @@ export interface GeneImportance {
 export interface AnalysisResult {
   prediction: string;
   confidence: number;
-  is_inconclusive?: boolean;
+  is_inconclusive: boolean;
   clinical_note: string;
   top_genes: GeneImportance[];
 }

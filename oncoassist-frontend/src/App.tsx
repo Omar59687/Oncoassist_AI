@@ -6,13 +6,27 @@ import AnalysisLoading from './features/analysis/presentation/components/Analysi
 import ClinicalReport from './features/reporting/presentation/components/ClinicalReport';
 import type { AnalysisResult } from './features/analysis/domain/entities/AnalysisResult';
 import { AnalysisService } from './features/analysis/data/AnalysisService';
+import ReportErrorBoundary from './components/ReportErrorBoundary';
+
+type UploadedFileNames = {
+  mGE: string;
+  mDM: string;
+  mCNA: string;
+};
+
 function App() {
   const [status, setStatus] = useState<'upload' | 'loading' | 'report'>('upload');
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [uploadedFileNames, setUploadedFileNames] = useState<UploadedFileNames | null>(null);
 
 const handleStartAnalysis = async (mGE: File, mDM: File, mCNA: File) => {
   setErrorMessage(null);
+  setUploadedFileNames({
+    mGE: mGE.name,
+    mDM: mDM.name,
+    mCNA: mCNA.name,
+  });
   setStatus('loading');
   toast.loading('Uploading genomic data to server...', { id: 'analysis' });
 
@@ -61,7 +75,14 @@ const handleStartAnalysis = async (mGE: File, mDM: File, mCNA: File) => {
       <main>
         {status === 'upload' && <FileUploader onAnalyze={handleStartAnalysis} errorMessage={errorMessage} />}
         {status === 'loading' && <AnalysisLoading />}
-        {status === 'report' && analysisResult && <ClinicalReport data={analysisResult} />}
+        {status === 'report' && analysisResult && (
+          <ReportErrorBoundary
+            reportSnapshot={{ prediction: analysisResult.prediction, confidence: analysisResult.confidence }}
+            onBackToUpload={() => setStatus('upload')}
+          >
+            <ClinicalReport data={analysisResult} uploadedFileNames={uploadedFileNames} />
+          </ReportErrorBoundary>
+        )}
       </main>
     </div>
   );

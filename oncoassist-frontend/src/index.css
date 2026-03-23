@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
+.print-only {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4;
-    margin: 12mm;
+    margin: 11mm;
   }
 
   body {
@@ -16,12 +20,31 @@
     display: none !important;
   }
 
+  .print-only {
+    display: block !important;
+  }
+
   .print-report-shell {
     display: block !important;
   }
 
   .print-report-shell > * {
+    margin-bottom: 14px !important;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  .print-report-header,
+  .print-report-footer {
+    color: #0f172a !important;
   }
 }
